@@ -471,6 +471,8 @@ static const struct lora_driver_api sx126x_lora_api = {
 	.recv_async = sx12xx_lora_recv_async,
 	.test_cw = sx12xx_lora_test_cw,
 	.soft_reset = setFsAndRxBoosted,
+	.write_register = SX126xWriteRegister,
+	.read_register = SX126xReadRegister,
 };
 
 void setFsAndRxBoosted(const struct device *dev) {

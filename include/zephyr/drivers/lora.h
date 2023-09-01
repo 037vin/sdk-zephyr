@@ -168,6 +168,21 @@ typedef int (*lora_api_test_cw)(const struct device *dev, uint32_t frequency,
  */
 typedef int (*lora_api_soft_reset)(const struct device *dev);
 
+/**
+ * @typedef lora_api_write_register()
+ * @brief Callback API for calling SX126xWriteRegister()
+ *
+ * @see custom driver changes
+ */
+typedef int (*lora_api_write_register)(const struct device *dev, uint16_t address, uint8_t value);
+
+/**
+ * @typedef lora_api_read_register()
+ * @brief Callback API for calling SX126xReadRegister()
+ *
+ * @see custom driver changes
+ */
+typedef int (*lora_api_read_register)(const struct device *dev, uint16_t address);
 
 struct lora_driver_api {
 	lora_api_config config;
@@ -177,8 +192,38 @@ struct lora_driver_api {
 	lora_api_recv_async recv_async;
 	lora_api_test_cw test_cw;
 	lora_api_soft_reset soft_reset;
+	lora_api_write_register write_register;
+	lora_api_read_register read_register;
 };
 /** @endcond */
+
+/**
+ * @brief Read to the LoRa modem register
+ *
+ * @param dev     LoRa device
+ * @return 0 on success, negative on error
+ */
+static inline int lora_read_register(const struct device *dev, uint16_t address)
+{
+	const struct lora_driver_api *api =
+		(const struct lora_driver_api *)dev->api;
+
+	return api->read_register(dev, address);
+}
+
+/**
+ * @brief Write to the LoRa modem register
+ *
+ * @param dev     LoRa device
+ * @return 0 on success, negative on error
+ */
+static inline int lora_write_register(const struct device *dev, uint16_t address, uint8_t value)
+{
+	const struct lora_driver_api *api =
+		(const struct lora_driver_api *)dev->api;
+
+	return api->write_register(dev, address, value);
+}
 
 /**
  * @brief Soft reset the LoRa modem
