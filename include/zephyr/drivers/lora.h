@@ -184,6 +184,14 @@ typedef int (*lora_api_write_register)(const struct device *dev, uint16_t addres
  */
 typedef int (*lora_api_read_register)(const struct device *dev, uint16_t address);
 
+/**
+ * @typedef lora_api_reset_init()
+ * @brief Callback API for calling sx126x_lora_init()
+ *
+ * @see custom driver changes
+ */
+typedef int (*lora_api_hard_reset)(const struct device *dev);
+
 struct lora_driver_api {
 	lora_api_config config;
 	lora_api_send send;
@@ -194,8 +202,23 @@ struct lora_driver_api {
 	lora_api_soft_reset soft_reset;
 	lora_api_write_register write_register;
 	lora_api_read_register read_register;
+	lora_api_hard_reset hard_reset;
 };
 /** @endcond */
+
+/**
+ * @brief Read to the LoRa modem register
+ *
+ * @param dev     LoRa device
+ * @return 0 on success, negative on error
+ */
+static inline int lora_hard_reset(const struct device *dev)
+{
+	const struct lora_driver_api *api =
+		(const struct lora_driver_api *)dev->api;
+
+	return api->hard_reset(dev);
+}
 
 /**
  * @brief Read to the LoRa modem register

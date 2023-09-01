@@ -471,13 +471,29 @@ static const struct lora_driver_api sx126x_lora_api = {
 	.recv_async = sx12xx_lora_recv_async,
 	.test_cw = sx12xx_lora_test_cw,
 	.soft_reset = setFsAndRxBoosted,
-	.write_register = SX126xWriteRegister,
-	.read_register = SX126xReadRegister,
+	.write_register = registerWrite,
+	.read_register = registerRead,
+	.hard_reset = resetInit,
 };
 
-void setFsAndRxBoosted(const struct device *dev) {
+int setFsAndRxBoosted(const struct device *dev) {
 	SX126xSetFs();
 	SX126xSetRxBoosted(0);
+	return 0;
+}
+int registerWrite(const struct device *dev, uint16_t address, uint8_t value) {
+	SX126xWriteRegister(address, value);
+	return 0;
+}
+
+int registerRead(const struct device *dev, uint16_t address) {
+	uint8_t ret = SX126xReadRegister(address);
+	return ret;
+}
+
+int resetInit(const struct device *dev) {
+	int ret = sx126x_lora_init(dev);
+	return ret;
 }
 
 DEVICE_DT_INST_DEFINE(0, &sx126x_lora_init, NULL, &dev_data,
