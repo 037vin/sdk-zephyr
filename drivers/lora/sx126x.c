@@ -459,7 +459,7 @@ static int sx126x_lora_init(const struct device *dev)
 		LOG_ERR("Failed to initialize SX12xx common");
 		return ret;
 	}
-
+	
 	return 0;
 }
 
@@ -470,7 +470,13 @@ static const struct lora_driver_api sx126x_lora_api = {
 	.recv = sx12xx_lora_recv,
 	.recv_async = sx12xx_lora_recv_async,
 	.test_cw = sx12xx_lora_test_cw,
+	.soft_reset = setFsAndRxBoosted,
 };
+
+void setFsAndRxBoosted(const struct device *dev) {
+	SX126xSetFs();
+	SX126xSetRxBoosted(0);
+}
 
 DEVICE_DT_INST_DEFINE(0, &sx126x_lora_init, NULL, &dev_data,
 		      &dev_config, POST_KERNEL, CONFIG_LORA_INIT_PRIORITY,

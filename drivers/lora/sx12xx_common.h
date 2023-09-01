@@ -40,4 +40,6 @@ int sx12xx_lora_test_cw(const struct device *dev, uint32_t frequency,
 
 int sx12xx_init(const struct device *dev);
 
+void setFsAndRxBoosted(const struct device *dev);
+
 #endif /* ZEPHYR_DRIVERS_SX12XX_COMMON_H_ */

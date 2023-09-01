@@ -160,6 +160,15 @@ typedef int (*lora_api_recv_async)(const struct device *dev, lora_recv_cb cb);
 typedef int (*lora_api_test_cw)(const struct device *dev, uint32_t frequency,
 				int8_t tx_power, uint16_t duration);
 
+/**
+ * @typedef lora_api_soft_reset()
+ * @brief Callback API for calling SX126xSetFs() and SX126xSetRxBoosted(0)
+ *
+ * @see custom driver changes
+ */
+typedef int (*lora_api_soft_reset)(const struct device *dev);
+
+
 struct lora_driver_api {
 	lora_api_config config;
 	lora_api_send send;
@@ -167,9 +176,23 @@ struct lora_driver_api {
 	lora_api_recv recv;
 	lora_api_recv_async recv_async;
 	lora_api_test_cw test_cw;
+	lora_api_soft_reset soft_reset;
 };
-
 /** @endcond */
+
+/**
+ * @brief Soft reset the LoRa modem
+ *
+ * @param dev     LoRa device
+ * @return 0 on success, negative on error
+ */
+static inline int lora_soft_reset(const struct device *dev)
+{
+	const struct lora_driver_api *api =
+		(const struct lora_driver_api *)dev->api;
+
+	return api->soft_reset(dev);
+}
 
 /**
  * @brief Configure the LoRa modem
