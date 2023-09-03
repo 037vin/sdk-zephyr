@@ -104,7 +104,7 @@ static void sx12xx_ev_rx_done(uint8_t *payload, uint16_t size, int16_t rssi,
 	/* Receiving in asynchronous mode */
 	if (dev_data.async_rx_cb) {
 		/* Start receiving again */
-		Radio.Rx(0);
+		Radio.RxBoosted(0);
 		/* Run the callback */
 		dev_data.async_rx_cb(dev_data.dev, payload, size, rssi, snr);
 		/* Don't run the synchronous code */
@@ -252,7 +252,7 @@ int sx12xx_lora_recv(const struct device *dev, uint8_t *data, uint8_t size,
 	dev_data.rx_params.snr = snr;
 
 	Radio.SetMaxPayloadLength(MODEM_LORA, 255);
-	Radio.Rx(0);
+	Radio.RxBoosted(0);
 
 	ret = k_poll(&evt, 1, timeout);
 	if (ret < 0) {
@@ -293,8 +293,8 @@ int sx12xx_lora_recv_async(const struct device *dev, lora_recv_cb cb)
 	dev_data.async_rx_cb = cb;
 
 	/* Start reception */
-	Radio.SetMaxPayloadLength(MODEM_LORA, 255);
-	Radio.Rx(0);
+	Radio.SetMaxPayloadLength(MODEM_LORA, 6);
+	Radio.RxBoosted(0);
 
 	return 0;
 }
@@ -316,7 +316,7 @@ int sx12xx_lora_config(const struct device *dev,
 		Radio.SetTxConfig(MODEM_LORA, config->tx_power, 0,
 				  config->bandwidth, config->datarate,
 				  config->coding_rate, config->preamble_len,
-				  true, true, 0, 0, config->iq_inverted, 4000);
+				  true, true, false, 0, config->iq_inverted, 4000);
 	} else {
 		/* TODO: Get symbol timeout value from config parameters */
 		Radio.SetRxConfig(MODEM_LORA, config->bandwidth,
