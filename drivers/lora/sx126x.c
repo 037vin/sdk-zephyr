@@ -369,9 +369,9 @@ void SX126xWaitOnBusy(void)
 	}
 }
 
-void SX126xWakeup(void)
+int SX126xWakeup(const struct device *dev)
 {
-	int ret;
+	int ret = 0;
 
 	/* Reenable DIO1 when waking up */
 	sx126x_dio1_irq_enable(&dev_data);
@@ -391,7 +391,7 @@ void SX126xWakeup(void)
 	ret = spi_write_dt(&dev_config.bus, &tx);
 	if (ret < 0) {
 		LOG_ERR("SPI transaction failed: %i", ret);
-		return;
+		return ret;
 	}
 
 	LOG_DBG("Waiting for device...");
@@ -402,6 +402,7 @@ void SX126xWakeup(void)
 	 * standby mode (via startup)
 	 */
 	dev_data.mode = MODE_STDBY_RC;
+	return ret;
 }
 
 uint32_t SX126xGetDio1PinState(void)
@@ -416,6 +417,8 @@ static void sx126x_dio1_irq_work_handler(struct k_work *work)
 		LOG_WRN("DIO1 interrupt without valid HAL IRQ callback.");
 		return;
 	}
+
+	LOG_WRN("Processing DIO1 interrupt");
 
 	dev_data.radio_dio_irq(NULL);
 	if (Radio.IrqProcess) {
@@ -474,6 +477,7 @@ static const struct lora_driver_api sx126x_lora_api = {
 	.write_register = registerWrite,
 	.read_register = registerRead,
 	.hard_reset = resetHard,
+	.wake_up = SX126xWakeup,
 };
 
 int resetSoft(const struct device *dev) {

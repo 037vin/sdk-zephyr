@@ -101,6 +101,8 @@ static void sx12xx_ev_rx_done(uint8_t *payload, uint16_t size, int16_t rssi,
 {
 	struct k_poll_signal *sig = dev_data.operation_done;
 
+	LOG_WRN("sx12xx_ev_rx_done executed");
+
 	/* Receiving in asynchronous mode */
 	if (dev_data.async_rx_cb) {
 		/* Start receiving again */
@@ -151,9 +153,11 @@ static void sx12xx_ev_rx_done(uint8_t *payload, uint16_t size, int16_t rssi,
 	k_poll_signal_raise(sig, 0);
 }
 
-static void sx12xx_ev_tx_done(void)
+static void customTxTimeout(void) 
 {
 	struct k_poll_signal *sig = dev_data.operation_done;
+
+	LOG_WRN("customTxTimeout executed");
 
 	if (modem_release(&dev_data)) {
 		/* Raise signal if provided */
@@ -161,6 +165,21 @@ static void sx12xx_ev_tx_done(void)
 			k_poll_signal_raise(sig, 0);
 		}
 	}
+}
+
+static void sx12xx_ev_tx_done(void)
+{
+	struct k_poll_signal *sig = dev_data.operation_done;
+
+	LOG_WRN("sx12xx_ev_tx_done executed");
+
+	if (modem_release(&dev_data)) {
+		/* Raise signal if provided */
+		if (sig) {
+			k_poll_signal_raise(sig, 0);
+		}
+	}
+
 }
 
 int sx12xx_lora_send(const struct device *dev, uint8_t *data,
@@ -191,16 +210,20 @@ int sx12xx_lora_send(const struct device *dev, uint8_t *data,
 				   dev_data.tx_cfg.coding_rate,
 				   dev_data.tx_cfg.preamble_len,
 				   0, data_len, true);
-	LOG_DBG("Expected air time of %d bytes = %dms", data_len, air_time);
+	LOG_WRN("Expected air time of %d bytes = %dms", data_len, air_time);
+
+	LOG_WRN("Custom air_time set to 800ms");
+	air_time = 0x320;
 
 	/* Wait for the packet to finish transmitting.
 	 * Use twice the tx duration to ensure that we are actually detecting
 	 * a failed transmission, and not some minor timing variation between
 	 * modem and driver.
 	 */
-	ret = k_poll(&evt, 1, K_MSEC(2 * air_time));
+	//ret = k_poll(&evt, 1, K_MSEC(2 * air_time));
+	ret = k_poll(&evt, 1, K_MSEC(air_time));
 	if (ret < 0) {
-		LOG_ERR("Packet transmission failed!");
+		LOG_ERR("Packet transmission cutoff at custom air_time of 800ms!");
 		if (!modem_release(&dev_data)) {
 			/* TX done interrupt is currently running */
 			k_poll(&evt, 1, K_FOREVER);
@@ -316,7 +339,7 @@ int sx12xx_lora_config(const struct device *dev,
 		Radio.SetTxConfig(MODEM_LORA, config->tx_power, 0,
 				  config->bandwidth, config->datarate,
 				  config->coding_rate, config->preamble_len,
-				  true, true, false, 0, config->iq_inverted, 4000);
+				  true, true, false, 0, config->iq_inverted, 48640);
 	} else {
 		/* TODO: Get symbol timeout value from config parameters */
 		Radio.SetRxConfig(MODEM_LORA, config->bandwidth,
@@ -350,6 +373,7 @@ int sx12xx_init(const struct device *dev)
 
 	dev_data.dev = dev;
 	dev_data.events.TxDone = sx12xx_ev_tx_done;
+	//dev_data.events.TxTimeout = customTxTimeout;
 	dev_data.events.RxDone = sx12xx_ev_rx_done;
 	Radio.Init(&dev_data.events);
 

@@ -192,6 +192,14 @@ typedef int (*lora_api_read_register)(const struct device *dev, uint16_t address
  */
 typedef int (*lora_api_hard_reset)(const struct device *dev);
 
+/**
+ * @typedef lora_api_wake_up()
+ * @brief Callback API for calling SX126xWakeup()
+ *
+ * @see custom driver changes
+ */
+typedef int (*lora_api_wake_up)(const struct device *dev);
+
 struct lora_driver_api {
 	lora_api_config config;
 	lora_api_send send;
@@ -203,8 +211,23 @@ struct lora_driver_api {
 	lora_api_write_register write_register;
 	lora_api_read_register read_register;
 	lora_api_hard_reset hard_reset;
+	lora_api_wake_up wake_up;
 };
 /** @endcond */
+
+/**
+ * @brief Wake up the modem and set DIO
+ *
+ * @param dev     LoRa device
+ * @return 0 on success, negative on error
+ */
+static inline int lora_wake_up(const struct device *dev)
+{
+	const struct lora_driver_api *api =
+		(const struct lora_driver_api *)dev->api;
+
+	return api->wake_up(dev);
+}
 
 /**
  * @brief Read to the LoRa modem register
