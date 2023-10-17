@@ -373,7 +373,7 @@ int sx12xx_init(const struct device *dev)
 
 	dev_data.dev = dev;
 	dev_data.events.TxDone = sx12xx_ev_tx_done;
-	//dev_data.events.TxTimeout = customTxTimeout;
+	dev_data.events.TxTimeout = customTxTimeout;
 	dev_data.events.RxDone = sx12xx_ev_rx_done;
 	Radio.Init(&dev_data.events);
 
