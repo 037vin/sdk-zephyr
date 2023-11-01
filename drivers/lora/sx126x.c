@@ -474,6 +474,7 @@ static const struct lora_driver_api sx126x_lora_api = {
 	.write_register = registerWrite,
 	.read_register = registerRead,
 	.hard_reset = resetHard,
+	.set_channel = setRfChannel,
 };
 
 int resetSoft(const struct device *dev) {
@@ -494,6 +495,15 @@ int registerRead(const struct device *dev, uint16_t address) {
 int resetHard(const struct device *dev) {
 	int ret = sx126x_lora_init(dev);
 	return ret;
+}
+
+int setRfChannel(uint32_t freq) {
+	SX126xSetStandby(STDBY_RC);
+	SX126xSetPacketType(PACKET_TYPE_LORA);
+	//SX126xSetOperatingMode(MODE_STDBY_RC);
+	SX126xSetFs();
+	SX126xSetRfFrequency(freq);
+	return 0;
 }
 
 DEVICE_DT_INST_DEFINE(0, &sx126x_lora_init, NULL, &dev_data,
