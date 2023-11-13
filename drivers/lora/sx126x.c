@@ -497,7 +497,7 @@ int resetHard(const struct device *dev) {
 	return ret;
 }
 
-int setRfChannel(uint32_t freq) {
+int setRfChannel(const struct device *dev, uint32_t freq) {
 	SX126xSetStandby(STDBY_RC);
 	SX126xSetPacketType(PACKET_TYPE_LORA);
 	//SX126xSetOperatingMode(MODE_STDBY_RC);
