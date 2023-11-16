@@ -182,6 +182,7 @@ int sx12xx_lora_send(const struct device *dev, uint8_t *data,
 	ret = sx12xx_lora_send_async(dev, data, data_len, &done);
 	if (ret < 0) {
 		return ret;
+		printk("sx12xx_lora_send_async returned %d\n", ret);
 	}
 
 	/* Calculate expected airtime of the packet */
@@ -191,16 +192,23 @@ int sx12xx_lora_send(const struct device *dev, uint8_t *data,
 				   dev_data.tx_cfg.coding_rate,
 				   dev_data.tx_cfg.preamble_len,
 				   0, data_len, true);
-	LOG_DBG("Expected air time of %d bytes = %dms", data_len, air_time);
+	printk("Expected air time of %d bytes = %dms\n", data_len, air_time);
 
 	/* Wait for the packet to finish transmitting.
 	 * Use twice the tx duration to ensure that we are actually detecting
 	 * a failed transmission, and not some minor timing variation between
 	 * modem and driver.
 	 */
-	ret = k_poll(&evt, 1, K_MSEC(2 * air_time));
+	//ret = k_poll(&evt, 1, K_MSEC(2 * air_time));
+	//////////////////////////////////////////////
+	//remove when tx interrupt working
+	air_time = 800;
+	ret = k_poll(&evt, 1, K_MSEC(air_time));
+	//remove when tx interrupt working
+	//////////////////////////////////////////////
 	if (ret < 0) {
-		LOG_ERR("Packet transmission failed!");
+		printk("k_poll returned %d using air_time %d\n", ret, air_time);
+		LOG_ERR("TX finished interrupt did not fire!");
 		if (!modem_release(&dev_data)) {
 			/* TX done interrupt is currently running */
 			k_poll(&evt, 1, K_FOREVER);
