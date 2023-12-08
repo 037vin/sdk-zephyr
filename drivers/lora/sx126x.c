@@ -506,6 +506,58 @@ int setRfChannel(const struct device *dev, uint32_t freq) {
 	return 0;
 }
 
+int switchModeSend(const struct device *dev, uint8_t mode, uint32_t freq, uint8_t power, uint8_t *payload, uint8_t size) {
+	if (!modem_acquire(&dev_data)) {
+		return -EBUSY;
+	}
+	//common
+	SX126xSetStandby(STDBY_RC); //SX126xSetOperatingMode(MODE_STDBY_RC);
+	SX126xSetPacketType(PACKET_TYPE_LORA);
+	SX126xSetRfFrequency(freq);
+	//SX126xSetFs();
+		
+	//check tx power
+	SX126xSetTxParams(power, RADIO_RAMP_40_US);  //
+		//SX126xSetPaConfig(0x04, 0x07, 0x00, 0x01);  //verified
+	SX126xSetBufferBaseAddress(0x00, 0x00);
+	SX126xSetPayload( payload, size );
+	SX126xSetModulationParams(0x07, 0x01, 0x01);
+	SX126xSetPacketParams(0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08);
+	SX126xSetDioIrqParams(0x00, 0x00, 0x00, 0x00);
+	SX126xWriteRegister(0x08, 0x04); //syncword
+	SX126xSetTx(0); //timeout
+	//Wait for the IRQ TxDone or Timeout:
+	//Clear the IRQ TxDone flag
+	//SX126xClearIrqStatus(IRQ_TX_DONE);
+	SX126xClearIrqStatus(IRQ_TX_DONE);
+	//should be in STDBY_RC mode
+
+	//Set up RX continuous
+	setRxContinuous();
+}
+int setRxContinuous() {
+	SX126xSetStandby(STDBY_RC);
+	SX126xSetPacketType(PACKET_TYPE_LORA);
+	SX126xSetRfFrequency(915000000);
+	SX126xSetBufferBaseAddress(0x00, 0x00);
+	SX126xSetModulationParams(0x07, 0x01, 0x01);
+	SX126xSetPacketParams(0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08);
+	SX126xSetDioIrqParams(0x00, 0x00, 0x00, 0x00);
+	SX126xWriteRegister(0x08, 0x04); //syncword
+	SX126xSetRx(0);
+	//Wait for IRQ RxDone2 or Timeout: the chip will stay in Rx and look for a new packet if the continuous mode is selected
+	//otherwise it will goes to STDBY_RC mode.
+
+	//In case of the IRQ RxDone, check the status to ensure CRC is correct: use the command GetIrqStatus()
+	//The IRQ RxDone means that a packet has been received but the CRC could be wrong: the user must check the CRC before
+	//validating the packet.
+	//Clear IRQ flag RxDone or Timeout: use the command ClearIrqStatus(). In case of a valid packet (CRC OK), get the packet
+	//length and address of the first byte of the received payload by using the command GetRxBufferStatus(...)
+	//In case of a valid packet (CRC OK), start reading the packet
+
+	return 0;
+}
+
 DEVICE_DT_INST_DEFINE(0, &sx126x_lora_init, NULL, &dev_data,
 		      &dev_config, POST_KERNEL, CONFIG_LORA_INIT_PRIORITY,
 		      &sx126x_lora_api);

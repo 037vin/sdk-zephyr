@@ -202,13 +202,13 @@ int sx12xx_lora_send(const struct device *dev, uint8_t *data,
 	//ret = k_poll(&evt, 1, K_MSEC(2 * air_time));
 	//////////////////////////////////////////////
 	//remove when tx interrupt working
-	air_time = 800;
+	air_time = 4000;
 	ret = k_poll(&evt, 1, K_MSEC(air_time));
 	//remove when tx interrupt working
 	//////////////////////////////////////////////
 	if (ret < 0) {
-		printk("k_poll returned %d using air_time %d\n", ret, air_time);
-		LOG_ERR("TX finished interrupt did not fire!");
+		//printk("k_poll returned %d using air_time %d\n", ret, air_time);
+		//LOG_ERR("TX finished interrupt did not fire!");
 		if (!modem_release(&dev_data)) {
 			/* TX done interrupt is currently running */
 			k_poll(&evt, 1, K_FOREVER);
@@ -324,12 +324,12 @@ int sx12xx_lora_config(const struct device *dev,
 		Radio.SetTxConfig(MODEM_LORA, config->tx_power, 0,
 				  config->bandwidth, config->datarate,
 				  config->coding_rate, config->preamble_len,
-				  true, true, false, 0, config->iq_inverted, 4000);
+				  true, true, false, 0, config->iq_inverted, 800);
 	} else {
 		/* TODO: Get symbol timeout value from config parameters */
 		Radio.SetRxConfig(MODEM_LORA, config->bandwidth,
 				  config->datarate, config->coding_rate,
-				  0, config->preamble_len, 10, true, 6,
+				  0, config->preamble_len, 7, true, 6,
 				  true, 0, 0, config->iq_inverted, true);
 	}
 
