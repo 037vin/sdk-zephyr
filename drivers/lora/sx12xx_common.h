@@ -47,5 +47,6 @@ int registerRead(const struct device *dev, uint16_t address);
 
 int resetHard(const struct device *dev);
 int setRfChannel(const struct device *dev, uint32_t freq);
+int setStandby(const struct device *dev, uint8_t mode);
 
 #endif /* ZEPHYR_DRIVERS_SX12XX_COMMON_H_ */

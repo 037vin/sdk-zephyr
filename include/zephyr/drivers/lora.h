@@ -200,6 +200,14 @@ typedef int (*lora_api_hard_reset)(const struct device *dev);
  */
 typedef int (*lora_api_set_channel)(const struct device *dev, uint32_t channel);
 
+/**
+ * @typedef lora_api_set_standby()
+ * @brief Callback API for setting the radio into standby RC
+ *
+ * @see custom driver changes
+ */
+typedef int (*lora_api_set_standby)(const struct device *dev, uint8_t mode);
+
 struct lora_driver_api {
 	lora_api_config config;
 	lora_api_send send;
@@ -212,8 +220,23 @@ struct lora_driver_api {
 	lora_api_read_register read_register;
 	lora_api_hard_reset hard_reset;
 	lora_api_set_channel set_channel;
+	lora_api_set_standby set_standby;
 };
 /** @endcond */
+
+/**
+ * @brief Set the LoRa modem standby
+ *
+ * @param dev     LoRa device
+ * @return 0 on success, negative on error
+ */
+static inline int lora_set_standby(const struct device *dev, uint8_t mode)
+{
+	const struct lora_driver_api *api =
+		(const struct lora_driver_api *)dev->api;
+
+	return api->set_standby(dev, mode);
+}
 
 /**
  * @brief Set the LoRa modem channel
