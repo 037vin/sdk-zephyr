@@ -163,11 +163,11 @@ static void sx12xx_ev_tx_done(void)
 	}
 }
 
-static void sx12xx_ev_tx_timed_out(void)
+/* static void sx12xx_ev_tx_timed_out(void)
 {
-	/* Just release the modem */
+	// Just release the modem 
 	modem_release(&dev_data);
-}
+} */
 
 int sx12xx_lora_send(const struct device *dev, uint8_t *data,
 		     uint32_t data_len)
@@ -198,7 +198,7 @@ int sx12xx_lora_send(const struct device *dev, uint8_t *data,
 				   dev_data.tx_cfg.coding_rate,
 				   dev_data.tx_cfg.preamble_len,
 				   0, data_len, true);
-	LOG_INF("Expected air time of %d bytes = %dms", data_len, air_time);
+	//LOG_INF("Expected air time of %d bytes = %dms", data_len, air_time);
 
 	/* Wait for the packet to finish transmitting.
 	 * Use twice the tx duration to ensure that we are actually detecting
@@ -208,7 +208,7 @@ int sx12xx_lora_send(const struct device *dev, uint8_t *data,
 	//ret = k_poll(&evt, 1, K_MSEC(2 * air_time));
 	//////////////////////////////////////////////
 	//remove when tx interrupt working
-	air_time = 800;
+	air_time = 400;
 	ret = k_poll(&evt, 1, K_MSEC(air_time));
 	//remove when tx interrupt working
 	//////////////////////////////////////////////
@@ -330,12 +330,12 @@ int sx12xx_lora_config(const struct device *dev,
 		Radio.SetTxConfig(MODEM_LORA, config->tx_power, 0,
 				  config->bandwidth, config->datarate,
 				  config->coding_rate, config->preamble_len,
-				  true, true, false, 0, config->iq_inverted, 3000);
+				  true, true, false, 24, config->iq_inverted, 390);
 	} else {
 		/* TODO: Get symbol timeout value from config parameters */
 		Radio.SetRxConfig(MODEM_LORA, config->bandwidth,
 				  config->datarate, config->coding_rate,
-				  0, config->preamble_len, 7, true, 6,              //SX126xSetLoRaSymbNumTimeout to 13 symbols
+				  0, config->preamble_len, 24, true, 6,              //SX126xSetLoRaSymbNumTimeout in symbols not bytes
 				  true, 0, 0, config->iq_inverted, true);          //RxContinuous to true or false?
 	}
 

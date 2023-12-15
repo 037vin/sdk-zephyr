@@ -56,6 +56,8 @@ int switchModeSend(const struct device *dev,
 					uint8_t size);
 int setRxContinuous();
 
+int wakeUp(const struct device *dev);
+
 void setModParams(const struct lora_modem_config *config);
 
 void setPacketParams(const struct lora_modem_config *config, uint8_t size);

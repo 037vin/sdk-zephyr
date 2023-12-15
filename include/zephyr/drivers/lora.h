@@ -216,6 +216,14 @@ typedef int (*lora_api_set_standby)(const struct device *dev, uint8_t mode);
  */
 typedef int (*lora_api_wait_on_busy)(const struct device *dev);
 
+/**
+ * @typedef lora_api_wake_up()
+ * @brief Callback API for waking up the lora radio
+ *
+ * @see custom driver changes
+ */
+typedef int (*lora_api_wake_up)(const struct device *dev);
+
 struct lora_driver_api {
 	lora_api_config config;
 	lora_api_send send;
@@ -230,14 +238,29 @@ struct lora_driver_api {
 	lora_api_set_channel set_channel;
 	lora_api_set_standby set_standby;
 	lora_api_wait_on_busy wait_on_busy;
+	lora_api_wake_up wake_up;
 };
 /** @endcond */
+
+/**
+ * @brief Wake up the LoRa modem
+ *
+ * @param dev     LoRa device
+ * @return 0 no indicator
+ */
+static inline int lora_wake_up(const struct device *dev)
+{
+	const struct lora_driver_api *api =
+		(const struct lora_driver_api *)dev->api;
+
+	return api->wake_up(dev);
+}
 
 /**
  * @brief Set the LoRa modem wait on busy
  *
  * @param dev     LoRa device
- * @return 0 on success, negative on error
+ * @return 0 no indicator
  */
 static inline int lora_wait_on_busy(const struct device *dev)
 {

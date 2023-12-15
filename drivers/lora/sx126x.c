@@ -477,11 +477,18 @@ static const struct lora_driver_api sx126x_lora_api = {
 	.set_channel = setRfChannel,
 	.set_standby = setStandby,
 	.wait_on_busy = waitOnBusy,
+	.wake_up = wakeUp,
 };
+
+int wakeUp(const struct device *dev) {
+	SX126xWakeup();
+	return 0;
+}
 
 int resetSoft(const struct device *dev) {
 	SX126xSetFs();
 	SX126xSetRxBoosted(0);
+	LOG_WRN("Soft reset complete");
 	return 0;
 }
 int registerWrite(const struct device *dev, uint16_t address, uint8_t value) {
@@ -495,7 +502,14 @@ int registerRead(const struct device *dev, uint16_t address) {
 }
 
 int resetHard(const struct device *dev) {
+	SX126xReset();
+	SX126xWaitOnBusy();
+	//k_sleep(K_MSEC(2));
 	int ret = sx126x_lora_init(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to initialize SX12xx common");
+		return ret;
+	}
 	return ret;
 }
 
@@ -520,12 +534,12 @@ int waitOnBusy(const struct device *dev) {
 	return 0;
 }	
 
-int switchModeSend(const struct device *dev, const struct lora_modem_config *config, uint8_t *payload, uint8_t size) 
+/* int switchModeSend(const struct device *dev, const struct lora_modem_config *config, uint8_t *payload, uint8_t size) 
 {
-	/* if (!modem_acquire(&dev_data)) {
+	if (!modem_acquire(&dev_data)) {
 		printk("modem_acquire failed\n");
 		return -EBUSY;
-	} */
+	}
 	SX126xWaitOnBusy();
 	SX126xSetStandby(STDBY_RC); //SX126xSetOperatingMode(MODE_STDBY_RC);
 	SX126xSetPacketType(PACKET_TYPE_LORA);
@@ -613,7 +627,7 @@ void setPacketParams(const struct lora_modem_config *config, uint8_t size) {
 	buf[4] = LORA_CRC_ON;
 	buf[5] = config->iq_inverted;
     SX126xWriteCommand( RADIO_SET_PACKETPARAMS, buf, n );
-}
+} */
 
 DEVICE_DT_INST_DEFINE(0, &sx126x_lora_init, NULL, &dev_data,
 		      &dev_config, POST_KERNEL, CONFIG_LORA_INIT_PRIORITY,
