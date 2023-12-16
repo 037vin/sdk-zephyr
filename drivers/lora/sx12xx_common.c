@@ -330,7 +330,7 @@ int sx12xx_lora_config(const struct device *dev,
 		Radio.SetTxConfig(MODEM_LORA, config->tx_power, 0,
 				  config->bandwidth, config->datarate,
 				  config->coding_rate, config->preamble_len,
-				  true, true, false, 24, config->iq_inverted, 390);
+				  true, true, false, 0, config->iq_inverted, 24960);   //24960 * 15.625us = 390ms
 	} else {
 		/* TODO: Get symbol timeout value from config parameters */
 		Radio.SetRxConfig(MODEM_LORA, config->bandwidth,
