@@ -507,7 +507,7 @@ int resetHard(const struct device *dev) {
 	//k_sleep(K_MSEC(2));
 	int ret = sx126x_lora_init(dev);
 	if (ret < 0) {
-		LOG_ERR("Failed to initialize SX12xx common");
+		LOG_ERR("sx126x_lora_init failed at resetHard");
 		return ret;
 	}
 	return ret;
