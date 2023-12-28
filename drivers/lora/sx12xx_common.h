@@ -47,7 +47,8 @@ int registerRead(const struct device *dev, uint16_t address);
 
 int resetHard(const struct device *dev);
 int setRfChannel(const struct device *dev, uint32_t freq);
-int setStandby(const struct device *dev, uint8_t mode);
+int setStandby(const struct device *dev);
+int setSleep(const struct device *dev);
 int waitOnBusy(const struct device *dev);
 
 int switchModeSend(const struct device *dev, 
@@ -61,5 +62,7 @@ int wakeUp(const struct device *dev);
 void setModParams(const struct lora_modem_config *config);
 
 void setPacketParams(const struct lora_modem_config *config, uint8_t size);
+
+int lora_set_RX_continuous(const struct device *dev);
 
 #endif /* ZEPHYR_DRIVERS_SX12XX_COMMON_H_ */

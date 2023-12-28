@@ -476,8 +476,10 @@ static const struct lora_driver_api sx126x_lora_api = {
 	.hard_reset = resetHard,
 	.set_channel = setRfChannel,
 	.set_standby = setStandby,
+	.set_sleep = setSleep,
 	.wait_on_busy = waitOnBusy,
 	.wake_up = wakeUp,
+	.set_RX_continuous = setRxContinuous,
 };
 
 int wakeUp(const struct device *dev) {
@@ -486,8 +488,13 @@ int wakeUp(const struct device *dev) {
 }
 
 int resetSoft(const struct device *dev) {
+	setSleep(dev);
+	setRfChannel(dev, 921000000);
+	//setStandby(dev);
 	SX126xSetFs();
-	SX126xSetRxBoosted(0);
+	setStandby(dev);
+	//SX126xSetRxBoosted(0);
+	waitOnBusy(dev);
 	LOG_WRN("Soft reset complete");
 	return 0;
 }
@@ -523,11 +530,29 @@ int setRfChannel(const struct device *dev, uint32_t freq) {
 	return 0;
 }
 
-int setStandby(const struct device *dev, uint8_t mode) {
-	SX126xSetStandby(mode);
+int setStandby(const struct device *dev) {
+	//SX126xWakeup();
+	SX126xWaitOnBusy();
+	SX126xSetStandby(STDBY_RC);
 	SX126xSetPacketType(PACKET_TYPE_LORA);
+	SX126xWaitOnBusy();
 	return 0;
 }
+int setSleep(const struct device *dev) {
+	SX126xWaitOnBusy();
+	SX126xSetStandby(STDBY_XOSC);
+	SleepParams_t sleep = {
+		.Fields.WarmStart = 0,
+		.Fields.Reset = 0,
+		.Fields.WakeUpRTC = 0,
+		.Fields.Reserved = 0,
+	};
+	SX126xWaitOnBusy();
+	SX126xSetSleep(sleep);
+	k_busy_wait(1000);
+	//SX126xSetPacketType(PACKET_TYPE_LORA);
+	return 0;
+}	
 
 int waitOnBusy(const struct device *dev) {
 	SX126xWaitOnBusy();
@@ -578,17 +603,20 @@ int waitOnBusy(const struct device *dev) {
 	//Set up RX continuous
 	setRxContinuous();
 	return 0;
-}
+} */
 
-int setRxContinuous() {
-	//SX126xSetStandby(STDBY_RC);
-	//SX126xSetPacketType(PACKET_TYPE_LORA);
-	//SX126xSetRfFrequency(915000000);
-	//SX126xSetBufferBaseAddress(0x00, 0x00);
+int setRxContinuous(const struct device *dev) {
+	SX126xSetStandby(STDBY_RC);
+	SX126xSetPacketType(PACKET_TYPE_LORA);
+	SX126xSetRfFrequency(915000000);
+	SX126xSetBufferBaseAddress(0x00, 0x00);
 	//SX126xSetModulationParams(0x07, 0x01, 0x01);
+	setModParams(dev->config);
 	//SX126xSetPacketParams(0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08);
-	//SX126xSetDioIrqParams(0x00, 0x00, 0x00, 0x00);
-	//SX126xWriteRegister(0x08, 0x04); //syncword
+	setPacketParams(dev->config, 6);
+	SX126xSetDioIrqParams(0xff, 0xff, 0x00, 0x00);
+	SX126xWriteRegister(0x08, 0x04); //syncword
+	SX126xSetOperatingMode(MODE_RX);
 	SX126xSetRx(0);
 	//Wait for IRQ RxDone2 or Timeout: the chip will stay in Rx and look for a new packet if the continuous mode is selected
 	//otherwise it will goes to STDBY_RC mode.
@@ -627,7 +655,7 @@ void setPacketParams(const struct lora_modem_config *config, uint8_t size) {
 	buf[4] = LORA_CRC_ON;
 	buf[5] = config->iq_inverted;
     SX126xWriteCommand( RADIO_SET_PACKETPARAMS, buf, n );
-} */
+}
 
 DEVICE_DT_INST_DEFINE(0, &sx126x_lora_init, NULL, &dev_data,
 		      &dev_config, POST_KERNEL, CONFIG_LORA_INIT_PRIORITY,

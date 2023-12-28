@@ -206,7 +206,15 @@ typedef int (*lora_api_set_channel)(const struct device *dev, uint32_t channel);
  *
  * @see custom driver changes
  */
-typedef int (*lora_api_set_standby)(const struct device *dev, uint8_t mode);
+typedef int (*lora_api_set_standby)(const struct device *dev);
+
+/**
+ * @typedef lora_api_set_sleep()
+ * @brief Callback API for setting the radio into sleep
+ *
+ * @see custom driver changes
+ */
+typedef int (*lora_api_set_sleep)(const struct device *dev);
 
 /**
  * @typedef lora_api_wait_on_busy()
@@ -224,6 +232,14 @@ typedef int (*lora_api_wait_on_busy)(const struct device *dev);
  */
 typedef int (*lora_api_wake_up)(const struct device *dev);
 
+/**
+ * @typedef lora_api_set_RX_continuous()
+ * @brief Callback API for setting the radio into continuous RX mode
+ *
+ * @see custom driver changes
+ */
+typedef int (*lora_api_set_RX_continuous)(const struct device *dev);
+
 struct lora_driver_api {
 	lora_api_config config;
 	lora_api_send send;
@@ -237,8 +253,10 @@ struct lora_driver_api {
 	lora_api_hard_reset hard_reset;
 	lora_api_set_channel set_channel;
 	lora_api_set_standby set_standby;
+	lora_api_set_sleep set_sleep;
 	lora_api_wait_on_busy wait_on_busy;
 	lora_api_wake_up wake_up;
+	lora_api_set_RX_continuous set_RX_continuous;
 };
 /** @endcond */
 
@@ -276,12 +294,26 @@ static inline int lora_wait_on_busy(const struct device *dev)
  * @param dev     LoRa device
  * @return 0 on success, negative on error
  */
-static inline int lora_set_standby(const struct device *dev, uint8_t mode)
+static inline int lora_set_standby(const struct device *dev)
 {
 	const struct lora_driver_api *api =
 		(const struct lora_driver_api *)dev->api;
 
-	return api->set_standby(dev, mode);
+	return api->set_standby(dev);
+}
+
+/**
+ * @brief Set the LoRa modem sleep
+ *
+ * @param dev     LoRa device
+ * @return 0 on success, negative on error
+ */
+static inline int lora_set_sleep(const struct device *dev)
+{
+	const struct lora_driver_api *api =
+		(const struct lora_driver_api *)dev->api;
+
+	return api->set_sleep(dev);
 }
 
 /**
@@ -483,6 +515,22 @@ static inline int lora_test_cw(const struct device *dev, uint32_t frequency,
 	}
 
 	return api->test_cw(dev, frequency, tx_power, duration);
+}
+
+/** @endcond */
+
+/**
+ * @brief Wake up the LoRa modem
+ *
+ * @param dev     LoRa device
+ * @return 0 no indicator
+ */
+static inline int lora_set_RX_continuous(const struct device *dev)
+{
+	const struct lora_driver_api *api =
+		(const struct lora_driver_api *)dev->api;
+
+	return api->set_RX_continuous(dev);
 }
 
 #ifdef __cplusplus
