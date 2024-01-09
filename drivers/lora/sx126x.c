@@ -488,9 +488,9 @@ int wakeUp(const struct device *dev) {
 }
 
 int resetSoft(const struct device *dev) {
-	setSleep(dev);
-	setRfChannel(dev, 921000000);
-	//setStandby(dev);
+	//setSleep(dev);
+	//setRfChannel(dev, 921000000);
+	setStandby(dev);
 	SX126xSetFs();
 	setStandby(dev);
 	//SX126xSetRxBoosted(0);
@@ -517,6 +517,7 @@ int resetHard(const struct device *dev) {
 		LOG_ERR("sx126x_lora_init failed at resetHard");
 		return ret;
 	}
+	//SX126xWaitOnBusy();
 	return ret;
 }
 
@@ -527,6 +528,7 @@ int setRfChannel(const struct device *dev, uint32_t freq) {
 	//SX126xSetOperatingMode(MODE_STDBY_RC);
 	//SX126xSetFs();
 	SX126xSetRfFrequency(freq);
+	SX126xWaitOnBusy();
 	return 0;
 }
 
@@ -608,7 +610,7 @@ int waitOnBusy(const struct device *dev) {
 int setRxContinuous(const struct device *dev) {
 	SX126xSetStandby(STDBY_RC);
 	SX126xSetPacketType(PACKET_TYPE_LORA);
-	SX126xSetRfFrequency(915000000);
+	SX126xSetRfFrequency(921000000);
 	SX126xSetBufferBaseAddress(0x00, 0x00);
 	//SX126xSetModulationParams(0x07, 0x01, 0x01);
 	setModParams(dev->config);
