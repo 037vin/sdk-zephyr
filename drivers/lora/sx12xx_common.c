@@ -214,7 +214,7 @@ int sx12xx_lora_send(const struct device *dev, uint8_t *data,
 	//////////////////////////////////////////////
 	if (ret < 0) {
 		//printk("k_poll returned %d using air_time %d\n", ret, air_time);
-		LOG_ERR("TX finished interrupt did not fire!");
+		LOG_WRN("TX finished interrupt did not fire!");
 		if (!modem_release(&dev_data)) {
 			/* TX done interrupt is currently running */
 			k_poll(&evt, 1, K_FOREVER);

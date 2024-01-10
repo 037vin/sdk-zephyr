@@ -489,6 +489,7 @@ int wakeUp(const struct device *dev) {
 }
 
 int resetSoft(const struct device *dev) {
+	SX126xWaitOnBusy();
 	SX126xSetFs();
 	SX126xSetRxBoosted(0);
 	waitOnBusy(dev);
