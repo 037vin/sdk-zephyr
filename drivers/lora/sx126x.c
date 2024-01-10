@@ -484,40 +484,37 @@ static const struct lora_driver_api sx126x_lora_api = {
 
 int wakeUp(const struct device *dev) {
 	SX126xWakeup();
+	waitOnBusy(dev);
 	return 0;
 }
 
 int resetSoft(const struct device *dev) {
-	//setSleep(dev);
-	//setRfChannel(dev, 921000000);
-	//setStandby(dev);
 	SX126xSetFs();
-	//setStandby(dev);
 	SX126xSetRxBoosted(0);
-	//waitOnBusy(dev);
-	LOG_WRN("Soft reset complete");
+	waitOnBusy(dev);
 	return 0;
 }
 int registerWrite(const struct device *dev, uint16_t address, uint8_t value) {
 	SX126xWriteRegister(address, value);
+	waitOnBusy(dev);
 	return 0;
 }
 
 int registerRead(const struct device *dev, uint16_t address) {
 	uint8_t ret = SX126xReadRegister(address);
+	waitOnBusy(dev);
 	return ret;
 }
 
 int resetHard(const struct device *dev) {
 	SX126xReset();
 	SX126xWaitOnBusy();
-	//k_sleep(K_MSEC(2));
 	int ret = sx126x_lora_init(dev);
 	if (ret < 0) {
 		LOG_ERR("sx126x_lora_init failed at resetHard");
 		return ret;
 	}
-	//SX126xWaitOnBusy();
+	SX126xWaitOnBusy();
 	return ret;
 }
 
@@ -525,15 +522,12 @@ int setRfChannel(const struct device *dev, uint32_t freq) {
 	SX126xWaitOnBusy();
 	SX126xSetStandby(STDBY_RC);
 	SX126xSetPacketType(PACKET_TYPE_LORA);
-	//SX126xSetOperatingMode(MODE_STDBY_RC);
-	//SX126xSetFs();
 	SX126xSetRfFrequency(freq);
 	SX126xWaitOnBusy();
 	return 0;
 }
 
 int setStandby(const struct device *dev) {
-	//SX126xWakeup();
 	SX126xWaitOnBusy();
 	SX126xSetStandby(STDBY_RC);
 	SX126xSetPacketType(PACKET_TYPE_LORA);
@@ -551,8 +545,6 @@ int setSleep(const struct device *dev) {
 	};
 	SX126xWaitOnBusy();
 	SX126xSetSleep(sleep);
-	k_busy_wait(1000);
-	//SX126xSetPacketType(PACKET_TYPE_LORA);
 	return 0;
 }	
 
