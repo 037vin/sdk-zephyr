@@ -507,6 +507,7 @@ int registerRead(const struct device *dev, uint16_t address) {
 }
 
 int resetHard(const struct device *dev) {
+	SX126xWaitOnBusy();
 	SX126xReset();
 	SX126xWaitOnBusy();
 	int ret = sx126x_lora_init(dev);
