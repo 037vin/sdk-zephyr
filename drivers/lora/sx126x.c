@@ -54,7 +54,7 @@ static const struct sx126x_config dev_config = {
 
 static struct sx126x_data dev_data;
 
-void SX126xWaitOnBusy(void);
+int SX126xWaitOnBusy(void);
 
 #define MODE(m) [MODE_##m] = #m
 static const char *const mode_names[] = {
@@ -362,11 +362,18 @@ void SX126xSetRfTxPower(int8_t power)
 	SX126xSetTxParams(power, RADIO_RAMP_40_US);
 }
 
-void SX126xWaitOnBusy(void)
+int SX126xWaitOnBusy(void)
 {
+	int counter = 0;
 	while (sx126x_is_busy(&dev_data)) {
 		k_sleep(K_MSEC(1));
+		counter++;
+		if (counter > 1000) {
+			LOG_ERR("Timeout waiting for busy to clear");
+			return -1;
+		}
 	}
+	return 0;
 }
 
 void SX126xWakeup(void)
@@ -551,7 +558,10 @@ int setSleep(const struct device *dev) {
 }	
 
 int waitOnBusy(const struct device *dev) {
-	SX126xWaitOnBusy();
+	if ( SX126xWaitOnBusy() < 0) {
+		LOG_ERR("waitOnBusy failed");
+		return -1;
+	}
 	return 0;
 }	
 
