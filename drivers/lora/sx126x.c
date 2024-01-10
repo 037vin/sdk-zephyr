@@ -490,11 +490,11 @@ int wakeUp(const struct device *dev) {
 int resetSoft(const struct device *dev) {
 	//setSleep(dev);
 	//setRfChannel(dev, 921000000);
-	setStandby(dev);
+	//setStandby(dev);
 	SX126xSetFs();
-	setStandby(dev);
-	//SX126xSetRxBoosted(0);
-	waitOnBusy(dev);
+	//setStandby(dev);
+	SX126xSetRxBoosted(0);
+	//waitOnBusy(dev);
 	LOG_WRN("Soft reset complete");
 	return 0;
 }
