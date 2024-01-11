@@ -559,7 +559,6 @@ int setSleep(const struct device *dev) {
 
 int waitOnBusy(const struct device *dev) {
 	if ( SX126xWaitOnBusy() < 0) {
-		LOG_ERR("waitOnBusy failed");
 		return -1;
 	}
 	return 0;
