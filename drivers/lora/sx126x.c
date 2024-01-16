@@ -531,6 +531,10 @@ int setRfChannel(const struct device *dev, uint32_t freq) {
 	SX126xWaitOnBusy();
 	SX126xSetStandby(STDBY_RC);
 	SX126xSetPacketType(PACKET_TYPE_LORA);
+	//SX126xSetRfFrequency(freq);
+
+	//SX126xSetFs();
+	SX126xWaitOnBusy();
 	SX126xSetRfFrequency(freq);
 	SX126xWaitOnBusy();
 	return 0;
@@ -547,7 +551,7 @@ int setSleep(const struct device *dev) {
 	SX126xWaitOnBusy();
 	SX126xSetStandby(STDBY_XOSC);
 	SleepParams_t sleep = {
-		.Fields.WarmStart = 0,
+		.Fields.WarmStart = 1,
 		.Fields.Reset = 0,
 		.Fields.WakeUpRTC = 0,
 		.Fields.Reserved = 0,
@@ -622,7 +626,15 @@ int setRxContinuous(const struct device *dev) {
 	SX126xSetDioIrqParams(0xff, 0xff, 0x00, 0x00);
 	SX126xWriteRegister(0x08, 0x04); //syncword
 	SX126xSetOperatingMode(MODE_RX);
-	SX126xSetRx(0);
+	//SX126xSetRx(0);
+
+	SX126xSetDioIrqParams( IRQ_RADIO_ALL, //IRQ_RX_DONE | IRQ_RX_TX_TIMEOUT,
+                           IRQ_RADIO_ALL, //IRQ_RX_DONE | IRQ_RX_TX_TIMEOUT,
+                           IRQ_RADIO_NONE,
+                           IRQ_RADIO_NONE );
+
+	SX126xSetRxBoosted(0);
+
 	//Wait for IRQ RxDone2 or Timeout: the chip will stay in Rx and look for a new packet if the continuous mode is selected
 	//otherwise it will goes to STDBY_RC mode.
 
@@ -640,11 +652,12 @@ void setModParams(const struct lora_modem_config *config) {
 	int n = 4;
 	uint8_t buf[n];
 	//buf[0] = modulationParams->Params.LoRa.SpreadingFactor;
-	buf[0] = config->datarate;
+	//buf[0] = config->datarate;
+	buf[0] = SF_11;
 	//buf[1] = modulationParams->Params.LoRa.Bandwidth;
-	buf[1] = config->bandwidth;
+	buf[1] = BW_125_KHZ;
 	//buf[2] = modulationParams->Params.LoRa.CodingRate;
-	buf[2] = config->coding_rate;
+	buf[2] = CR_4_5;
 	//buf[3] = modulationParams->Params.LoRa.LowDatarateOptimize;
 	buf[3] = 0x01;
     SX126xWriteCommand( RADIO_SET_MODULATIONPARAMS, buf, n );
@@ -653,12 +666,12 @@ void setModParams(const struct lora_modem_config *config) {
 void setPacketParams(const struct lora_modem_config *config, uint8_t size) {
 	int n = 6;
 	uint8_t buf[n];
-	buf[0] = ( config->preamble_len >> 8 ) & 0xFF;
-	buf[1] = config->preamble_len;
+	buf[0] = ( 0x00 >> 8 ) & 0xFF; //Preamble length
+	buf[1] = 0x06; //Preamble length
 	buf[2] = 0x01; //Implicit header
-	buf[3] = size;
-	buf[4] = LORA_CRC_ON;
-	buf[5] = config->iq_inverted;
+	buf[3] = 0x06; //Payload length
+	buf[4] = LORA_CRC_ON; //CRC on
+	buf[5] = false; //Invert IQ
     SX126xWriteCommand( RADIO_SET_PACKETPARAMS, buf, n );
 }
 
