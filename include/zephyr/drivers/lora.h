@@ -119,7 +119,9 @@ typedef int (*lora_api_config)(const struct device *dev,
  *
  * @see lora_send() for argument descriptions.
  */
-typedef int (*lora_api_send)(const struct device *dev,
+/* typedef int (*lora_api_send)(const struct device *dev,
+			     uint8_t *data, uint32_t data_len); */
+	typedef int (*lora_api_send)(const struct device *dev, const struct lora_modem_config *config,
 			     uint8_t *data, uint32_t data_len);
 
 /**
@@ -409,17 +411,27 @@ static inline int lora_config(const struct device *dev,
  * @note This blocks until transmission is complete.
  *
  * @param dev       LoRa device
+ * @param config    Data structure containing the intended configuration for the
+		    modem
  * @param data      Data to be sent
  * @param data_len  Length of the data to be sent
  * @return 0 on success, negative on error
  */
-static inline int lora_send(const struct device *dev,
+/* static inline int lora_send(const struct device *dev,
 			    uint8_t *data, uint32_t data_len)
 {
 	const struct lora_driver_api *api =
 		(const struct lora_driver_api *)dev->api;
 
 	return api->send(dev, data, data_len);
+} */
+static inline int lora_send(const struct device *dev, const struct lora_modem_config *config,
+			    uint8_t *data, uint32_t data_len)
+{
+	const struct lora_driver_api *api =
+		(const struct lora_driver_api *)dev->api;
+
+	return api->send(dev, config, data, data_len);
 }
 
 /**

@@ -472,7 +472,8 @@ static int sx126x_lora_init(const struct device *dev)
 
 static const struct lora_driver_api sx126x_lora_api = {
 	.config = sx12xx_lora_config,
-	.send = sx12xx_lora_send,
+	/* .send = sx12xx_lora_send, */
+	.send = sendLoRa,
 	.send_async = sx12xx_lora_send_async,
 	.recv = sx12xx_lora_recv,
 	.recv_async = sx12xx_lora_recv_async,
@@ -568,51 +569,50 @@ int waitOnBusy(const struct device *dev) {
 	return 0;
 }	
 
-/* int switchModeSend(const struct device *dev, const struct lora_modem_config *config, uint8_t *payload, uint8_t size) 
+int sendLoRa(const struct device *dev, const struct lora_modem_config *config, uint8_t *payload, uint8_t size) 
 {
-	if (!modem_acquire(&dev_data)) {
+	if (!acquire_modem()) {
 		printk("modem_acquire failed\n");
 		return -EBUSY;
 	}
+	
 	SX126xWaitOnBusy();
 	SX126xSetStandby(STDBY_RC); //SX126xSetOperatingMode(MODE_STDBY_RC);
 	SX126xSetPacketType(PACKET_TYPE_LORA);
 	SX126xSetRfFrequency(config->frequency);
+	SX126xSetPaConfig(0x04, 0x07, 0x00, 0x01);
 	//SX126xSetFs();
 
 	SX126xSetTxParams(config->tx_power, RADIO_RAMP_40_US);  //
 		//SX126xSetPaConfig(0x04, 0x07, 0x00, 0x01);  //verified
+	SX126xWaitOnBusy();
 	SX126xSetBufferBaseAddress(0x00, 0x00);
 	SX126xSetPayload( payload, size );
 	setModParams(config); //SX126xSetModulationParams(0x07, 0x01, 0x01);
 
 	setPacketParams(config, size); //SX126xSetPacketParams(0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08);
 
-
-	SX126xClearIrqStatus(IRQ_RADIO_ALL);
-	//SX126xSetDioIrqParams(IRQ_RADIO_ALL, IRQ_RADIO_ALL, IRQ_RADIO_NONE, IRQ_RADIO_NONE);
+	//SX126xClearIrqStatus(IRQ_RADIO_ALL);
+	SX126xSetDioIrqParams(IRQ_RADIO_ALL, IRQ_RADIO_ALL, IRQ_RADIO_NONE, IRQ_RADIO_NONE);
 
 	SX126xWriteRegister( REG_LR_SYNCWORD, ( LORA_MAC_PRIVATE_SYNCWORD >> 8 ) & 0xFF );
     SX126xWriteRegister( REG_LR_SYNCWORD + 1, LORA_MAC_PRIVATE_SYNCWORD & 0xFF );
-
-
-
-
 	SX126xSetTx(800); //timeout
+	SX126xWaitOnBusy();
+	release_modem();
 	//Wait for the IRQ TxDone or Timeout:
 
-	lora_send(dev, payload, size);
 
 
 	//Clear the IRQ TxDone flag
 	//SX126xClearIrqStatus(IRQ_TX_DONE);
-	SX126xClearIrqStatus(IRQ_TX_DONE);
+	/* SX126xClearIrqStatus(IRQ_TX_DONE);
 	//should be in STDBY_RC mode
 
 	//Set up RX continuous
-	setRxContinuous();
+	setRxContinuous(); */
 	return 0;
-} */
+}
 
 int setRxContinuous(const struct device *dev) {
 	SX126xSetStandby(STDBY_RC);

@@ -216,6 +216,7 @@ int sx12xx_lora_send(const struct device *dev, uint8_t *data,
 		//printk("k_poll returned %d using air_time %d\n", ret, air_time);
 		LOG_WRN("TX finished interrupt did not fire!");
 		if (!modem_release(&dev_data)) {
+			LOG_ERR("modem_release returned an error!");
 			/* TX done interrupt is currently running */
 			k_poll(&evt, 1, K_FOREVER);
 		}
@@ -357,6 +358,19 @@ int sx12xx_lora_test_cw(const struct device *dev, uint32_t frequency,
 	Radio.SetTxContinuousWave(frequency, tx_power, duration);
 	return 0;
 }
+
+int acquire_modem() {
+	if (!modem_acquire(&dev_data)) {
+		return -EBUSY;
+	}
+	return 0;
+}
+int release_modem() {
+	if (!modem_release(&dev_data)) {
+		return -EBUSY;
+	}
+	return 0;
+}	
 
 int sx12xx_init(const struct device *dev)
 {

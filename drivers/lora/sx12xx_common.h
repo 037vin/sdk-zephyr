@@ -65,4 +65,9 @@ void setPacketParams(const struct lora_modem_config *config, uint8_t size);
 
 int lora_set_RX_continuous(const struct device *dev);
 
+int sendLoRa(const struct device *dev, const struct lora_modem_config *config, uint8_t *payload, uint8_t size);
+
+int acquire_modem(void);
+int release_modem(void);
+
 #endif /* ZEPHYR_DRIVERS_SX12XX_COMMON_H_ */
