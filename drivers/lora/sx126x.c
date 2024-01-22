@@ -472,8 +472,8 @@ static int sx126x_lora_init(const struct device *dev)
 
 static const struct lora_driver_api sx126x_lora_api = {
 	.config = sx12xx_lora_config,
-	/* .send = sx12xx_lora_send, */
-	.send = sendLoRa,
+	.send = sx12xx_lora_send,
+	/* .send = sendLoRa, */
 	.send_async = sx12xx_lora_send_async,
 	.recv = sx12xx_lora_recv,
 	.recv_async = sx12xx_lora_recv_async,
@@ -569,8 +569,12 @@ int waitOnBusy(const struct device *dev) {
 	return 0;
 }	
 
-int sendLoRa(const struct device *dev, const struct lora_modem_config *config, uint8_t *payload, uint8_t size) 
+int sendLoRa(const struct device *dev, struct lora_modem_config *config, uint8_t *payload, uint8_t size) 
 {
+
+	SX126xWakeup();
+	SX126xWaitOnBusy();
+
 	if (!acquire_modem()) {
 		printk("modem_acquire failed\n");
 		return -EBUSY;
@@ -586,8 +590,8 @@ int sendLoRa(const struct device *dev, const struct lora_modem_config *config, u
 	SX126xSetTxParams(config->tx_power, RADIO_RAMP_40_US);  //
 		//SX126xSetPaConfig(0x04, 0x07, 0x00, 0x01);  //verified
 	SX126xWaitOnBusy();
-	SX126xSetBufferBaseAddress(0x00, 0x00);
-	SX126xSetPayload( payload, size );
+	//SX126xSetBufferBaseAddress(0x00, 0x00);
+	
 	setModParams(config); //SX126xSetModulationParams(0x07, 0x01, 0x01);
 
 	setPacketParams(config, size); //SX126xSetPacketParams(0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08);
@@ -595,10 +599,13 @@ int sendLoRa(const struct device *dev, const struct lora_modem_config *config, u
 	//SX126xClearIrqStatus(IRQ_RADIO_ALL);
 	SX126xSetDioIrqParams(IRQ_RADIO_ALL, IRQ_RADIO_ALL, IRQ_RADIO_NONE, IRQ_RADIO_NONE);
 
-	SX126xWriteRegister( REG_LR_SYNCWORD, ( LORA_MAC_PRIVATE_SYNCWORD >> 8 ) & 0xFF );
-    SX126xWriteRegister( REG_LR_SYNCWORD + 1, LORA_MAC_PRIVATE_SYNCWORD & 0xFF );
-	SX126xSetTx(800); //timeout
+	//SX126xWriteRegister( REG_LR_SYNCWORD, ( LORA_MAC_PRIVATE_SYNCWORD >> 8 ) & 0xFF );
+    //SX126xWriteRegister( REG_LR_SYNCWORD + 1, LORA_MAC_PRIVATE_SYNCWORD & 0xFF );
+	SX126xSetPayload( payload, size );
 	SX126xWaitOnBusy();
+	SX126xSetTx(24960); //timeout
+	SX126xWaitOnBusy();
+	k_sleep(K_MSEC(500));
 	release_modem();
 	//Wait for the IRQ TxDone or Timeout:
 
