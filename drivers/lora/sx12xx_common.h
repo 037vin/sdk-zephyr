@@ -59,13 +59,13 @@ int setRxContinuous();
 
 int wakeUp(const struct device *dev);
 
-void setModParams(const struct lora_modem_config *config);
+/* void setModParams(const struct lora_modem_config *config);
 
-void setPacketParams(const struct lora_modem_config *config, uint8_t size);
+void setPacketParams(const struct lora_modem_config *config, uint8_t size); */
 
 int lora_set_RX_continuous(const struct device *dev);
 
-int sendLoRa(const struct device *dev, struct lora_modem_config *config, uint8_t *payload, uint8_t size);
+int sendLoRa(const struct device *dev, uint8_t *payload, uint8_t size);
 
 int acquire_modem(void);
 int release_modem(void);

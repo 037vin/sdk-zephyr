@@ -569,9 +569,7 @@ int waitOnBusy(const struct device *dev) {
 	return 0;
 }	
 
-int sendLoRa(const struct device *dev, struct lora_modem_config *config, uint8_t *payload, uint8_t size) 
-{
-
+int sendLoRa(const struct device *dev, uint8_t *payload, uint8_t size) {
 	SX126xWakeup();
 	SX126xWaitOnBusy();
 
@@ -583,18 +581,18 @@ int sendLoRa(const struct device *dev, struct lora_modem_config *config, uint8_t
 	SX126xWaitOnBusy();
 	SX126xSetStandby(STDBY_RC); //SX126xSetOperatingMode(MODE_STDBY_RC);
 	SX126xSetPacketType(PACKET_TYPE_LORA);
-	SX126xSetRfFrequency(config->frequency);
+	//SX126xSetRfFrequency(config->frequency);
 	SX126xSetPaConfig(0x04, 0x07, 0x00, 0x01);
 	//SX126xSetFs();
 
-	SX126xSetTxParams(config->tx_power, RADIO_RAMP_40_US);  //
+	//SX126xSetTxParams(config->tx_power, RADIO_RAMP_40_US);  //
 		//SX126xSetPaConfig(0x04, 0x07, 0x00, 0x01);  //verified
-	SX126xWaitOnBusy();
+	//SX126xWaitOnBusy();
 	//SX126xSetBufferBaseAddress(0x00, 0x00);
 	
-	setModParams(config); //SX126xSetModulationParams(0x07, 0x01, 0x01);
+	//setModParams(config); //SX126xSetModulationParams(0x07, 0x01, 0x01);
 
-	setPacketParams(config, size); //SX126xSetPacketParams(0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08);
+	//setPacketParams(config, size); //SX126xSetPacketParams(0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08);
 
 	//SX126xClearIrqStatus(IRQ_RADIO_ALL);
 	SX126xSetDioIrqParams(IRQ_RADIO_ALL, IRQ_RADIO_ALL, IRQ_RADIO_NONE, IRQ_RADIO_NONE);
@@ -613,11 +611,11 @@ int sendLoRa(const struct device *dev, struct lora_modem_config *config, uint8_t
 
 	//Clear the IRQ TxDone flag
 	//SX126xClearIrqStatus(IRQ_TX_DONE);
-	/* SX126xClearIrqStatus(IRQ_TX_DONE);
+	//SX126xClearIrqStatus(IRQ_TX_DONE);
 	//should be in STDBY_RC mode
 
 	//Set up RX continuous
-	setRxContinuous(); */
+	//setRxContinuous();
 	return 0;
 }
 
@@ -627,9 +625,9 @@ int setRxContinuous(const struct device *dev) {
 	SX126xSetRfFrequency(921000000);
 	SX126xSetBufferBaseAddress(0x00, 0x00);
 	//SX126xSetModulationParams(0x07, 0x01, 0x01);
-	setModParams(dev->config);
+	//setModParams(dev->config);
 	//SX126xSetPacketParams(0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08);
-	setPacketParams(dev->config, 6);
+	//setPacketParams(dev->config, 6);
 	SX126xSetDioIrqParams(0xff, 0xff, 0x00, 0x00);
 	SX126xWriteRegister(0x08, 0x04); //syncword
 	SX126xSetOperatingMode(MODE_RX);
@@ -655,7 +653,7 @@ int setRxContinuous(const struct device *dev) {
 	return 0;
 }
 
-void setModParams(const struct lora_modem_config *config) {
+/* void setModParams(const struct lora_modem_config *config) {
 	int n = 4;
 	uint8_t buf[n];
 	//buf[0] = modulationParams->Params.LoRa.SpreadingFactor;
@@ -680,7 +678,7 @@ void setPacketParams(const struct lora_modem_config *config, uint8_t size) {
 	buf[4] = LORA_CRC_ON; //CRC on
 	buf[5] = false; //Invert IQ
     SX126xWriteCommand( RADIO_SET_PACKETPARAMS, buf, n );
-}
+} */
 
 DEVICE_DT_INST_DEFINE(0, &sx126x_lora_init, NULL, &dev_data,
 		      &dev_config, POST_KERNEL, CONFIG_LORA_INIT_PRIORITY,
