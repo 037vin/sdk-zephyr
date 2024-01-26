@@ -359,7 +359,8 @@ void SX126xReset(void)
 void SX126xSetRfTxPower(int8_t power)
 {
 	LOG_DBG("power: %" PRIi8, power);
-	SX126xSetTxParams(power, RADIO_RAMP_40_US);
+	//SX126xSetTxParams(power, RADIO_RAMP_40_US);
+	SX126xSetTxParams(power, RADIO_RAMP_1700_US);
 }
 
 int SX126xWaitOnBusy(void)
