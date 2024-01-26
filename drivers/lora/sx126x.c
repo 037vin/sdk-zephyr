@@ -509,7 +509,7 @@ int registerWrite(const struct device *dev, uint16_t address, uint8_t value) {
 	return 0;
 }
 
-int registerRead(const struct device *dev, uint16_t address) {
+uint8_t registerRead(const struct device *dev, uint16_t address) {
 	uint8_t ret = SX126xReadRegister(address);
 	waitOnBusy(dev);
 	return ret;

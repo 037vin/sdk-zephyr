@@ -184,7 +184,7 @@ typedef int (*lora_api_write_register)(const struct device *dev, uint16_t addres
  *
  * @see custom driver changes
  */
-typedef int (*lora_api_read_register)(const struct device *dev, uint16_t address);
+typedef uint8_t (*lora_api_read_register)(const struct device *dev, uint16_t address);
 
 /**
  * @typedef lora_api_hard_reset()
@@ -352,7 +352,7 @@ static inline int lora_hard_reset(const struct device *dev)
  * @param dev     LoRa device
  * @return 0 on success, negative on error
  */
-static inline int lora_read_register(const struct device *dev, uint16_t address)
+static inline uint8_t lora_read_register(const struct device *dev, uint16_t address)
 {
 	const struct lora_driver_api *api =
 		(const struct lora_driver_api *)dev->api;

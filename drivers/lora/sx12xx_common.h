@@ -43,7 +43,7 @@ int sx12xx_init(const struct device *dev);
 int resetSoft(const struct device *dev);
 
 int registerWrite(const struct device *dev, uint16_t address, uint8_t value);
-int registerRead(const struct device *dev, uint16_t address);
+uint8_t registerRead(const struct device *dev, uint16_t address);
 
 int resetHard(const struct device *dev);
 int setRfChannel(const struct device *dev, uint32_t freq);
