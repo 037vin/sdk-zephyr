@@ -85,9 +85,14 @@ static inline bool modem_acquire(struct sx12xx_data *data)
 static bool modem_release(struct sx12xx_data *data)
 {
 	/* Increment atomic so both acquire and release will fail */
-	if (!atomic_cas(&data->modem_usage, STATE_BUSY, STATE_CLEANUP)) {
+	/* if (!atomic_cas(&data->modem_usage, STATE_BUSY, STATE_CLEANUP)) {
 		return false;
-	}
+	} */
+
+
+	atomic_cas(&data->modem_usage, STATE_BUSY, STATE_CLEANUP);
+
+
 	/* Put radio back into sleep mode */
 	Radio.Sleep();
 	/* Completely release modem */
@@ -192,12 +197,12 @@ int sx12xx_lora_send(const struct device *dev, uint8_t *data,
 	}
 
 	/* Calculate expected airtime of the packet */
-	air_time = Radio.TimeOnAir(MODEM_LORA,
+	/* air_time = Radio.TimeOnAir(MODEM_LORA,
 				   dev_data.tx_cfg.bandwidth,
 				   dev_data.tx_cfg.datarate,
 				   dev_data.tx_cfg.coding_rate,
 				   dev_data.tx_cfg.preamble_len,
-				   0, data_len, true);
+				   0, data_len, true); */
 	//LOG_INF("Expected air time of %d bytes = %dms", data_len, air_time);
 
 	/* Wait for the packet to finish transmitting.
@@ -208,13 +213,13 @@ int sx12xx_lora_send(const struct device *dev, uint8_t *data,
 	//ret = k_poll(&evt, 1, K_MSEC(2 * air_time));
 	//////////////////////////////////////////////
 	//remove when tx interrupt working
-	air_time = 400;
+	air_time = 410;
 	ret = k_poll(&evt, 1, K_MSEC(air_time));
 	//remove when tx interrupt working
 	//////////////////////////////////////////////
 	if (ret < 0) {
-		//printk("k_poll returned %d using air_time %d\n", ret, air_time);
-		LOG_WRN("TX finished interrupt did not fire!");
+		LOG_INF("k_poll returned %d using air_time %d", ret, air_time);
+		//LOG_WRN("TX finished interrupt did not fire!");
 		if (!modem_release(&dev_data)) {
 			LOG_ERR("modem_release returned an error!");
 			/* TX done interrupt is currently running */

@@ -534,9 +534,6 @@ int setRfChannel(const struct device *dev, uint32_t freq) {
 	SX126xWaitOnBusy();
 	SX126xSetStandby(STDBY_RC);
 	SX126xSetPacketType(PACKET_TYPE_LORA);
-	//SX126xSetRfFrequency(freq);
-
-	//SX126xSetFs();
 	SX126xWaitOnBusy();
 	SX126xSetRfFrequency(freq);
 	SX126xWaitOnBusy();
