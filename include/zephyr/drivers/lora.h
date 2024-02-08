@@ -235,12 +235,20 @@ typedef int (*lora_api_wait_on_busy)(const struct device *dev);
 typedef int (*lora_api_wake_up)(const struct device *dev);
 
 /**
- * @typedef lora_api_set_RX_continuous()
- * @brief Callback API for setting the radio into continuous RX mode
+ * @typedef lora_api_dt_init()
+ * @brief Callback API for device tree settings initialization
  *
  * @see custom driver changes
  */
-typedef int (*lora_api_set_RX_continuous)(const struct device *dev);
+typedef int (*lora_api_dt_init)(const struct device *dev);
+
+/**
+ * @typedef lora_api_interrupt_init()
+ * @brief Callback API for setting the radio interrupts
+ *
+ * @see custom driver changes
+ */
+typedef int (*lora_api_interrupt_init)(const struct device *dev);
 
 struct lora_driver_api {
 	lora_api_config config;
@@ -258,9 +266,40 @@ struct lora_driver_api {
 	lora_api_set_sleep set_sleep;
 	lora_api_wait_on_busy wait_on_busy;
 	lora_api_wake_up wake_up;
-	lora_api_set_RX_continuous set_RX_continuous;
+	lora_api_dt_init dt_init;
+	lora_api_interrupt_init interrupt_init;
 };
 /** @endcond */
+
+/**
+ * @brief Init LoRa modem with the device tree settings
+ *
+ * @param dev     LoRa device
+ * @return 0 no indicator
+ */
+static inline int lora_dt_init(const struct device *dev)
+{
+	const struct lora_driver_api *api =
+		(const struct lora_driver_api *)dev->api;
+
+	return api->dt_init(dev);
+}
+
+/**
+ * @brief Init LoRa modem with the interrupt settings
+ *
+ * @param dev     LoRa device
+ * @return 0 no indicator
+ */
+static inline int lora_interrupt_init(const struct device *dev)
+{
+	const struct lora_driver_api *api =
+		(const struct lora_driver_api *)dev->api;
+
+	return api->interrupt_init(dev);
+}
+
+
 
 /**
  * @brief Wake up the LoRa modem
@@ -526,22 +565,6 @@ static inline int lora_test_cw(const struct device *dev, uint32_t frequency,
 	}
 
 	return api->test_cw(dev, frequency, tx_power, duration);
-}
-
-/** @endcond */
-
-/**
- * @brief Wake up the LoRa modem
- *
- * @param dev     LoRa device
- * @return 0 no indicator
- */
-static inline int lora_set_RX_continuous(const struct device *dev)
-{
-	const struct lora_driver_api *api =
-		(const struct lora_driver_api *)dev->api;
-
-	return api->set_RX_continuous(dev);
 }
 
 #ifdef __cplusplus

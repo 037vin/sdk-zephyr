@@ -463,11 +463,11 @@ static int sx126x_lora_init(const struct device *dev)
 		return -ENODEV;
 	}
 
-	ret = sx12xx_init(dev);
+	/* ret = sx12xx_init(dev);
 	if (ret < 0) {
 		LOG_ERR("Failed to initialize SX12xx common");
 		return ret;
-	}
+	} */
 	
 	return 0;
 }
@@ -483,14 +483,29 @@ static const struct lora_driver_api sx126x_lora_api = {
 	.soft_reset = resetSoft,
 	.write_register = registerWrite,
 	.read_register = registerRead,
-	.hard_reset = resetHard,
 	.set_channel = setRfChannel,
 	.set_standby = setStandby,
 	.set_sleep = setSleep,
 	.wait_on_busy = waitOnBusy,
 	.wake_up = wakeUp,
-	.set_RX_continuous = setRxContinuous,
+	.hard_reset = resetHard,
+	.dt_init = sx126x_lora_init,
+	.interrupt_init = sx12xx_init,
 };
+
+int resetHard(const struct device *dev) {
+	/* SX126xWaitOnBusy();
+	SX126xReset();
+	SX126xWaitOnBusy();
+	int ret = sx126x_lora_init(dev);
+	if (ret < 0) {
+		LOG_ERR("sx126x_lora_init failed at resetHard");
+		return ret;
+	}
+	SX126xWaitOnBusy();
+	return ret; */
+	return 0;
+}
 
 int wakeUp(const struct device *dev) {
 	SX126xWakeup();
@@ -514,19 +529,6 @@ int registerWrite(const struct device *dev, uint16_t address, uint8_t value) {
 uint8_t registerRead(const struct device *dev, uint16_t address) {
 	uint8_t ret = SX126xReadRegister(address);
 	waitOnBusy(dev);
-	return ret;
-}
-
-int resetHard(const struct device *dev) {
-	SX126xWaitOnBusy();
-	SX126xReset();
-	SX126xWaitOnBusy();
-	int ret = sx126x_lora_init(dev);
-	if (ret < 0) {
-		LOG_ERR("sx126x_lora_init failed at resetHard");
-		return ret;
-	}
-	SX126xWaitOnBusy();
 	return ret;
 }
 
@@ -568,117 +570,15 @@ int waitOnBusy(const struct device *dev) {
 	return 0;
 }	
 
-int sendLoRa(const struct device *dev, uint8_t *payload, uint8_t size) {
-	SX126xWakeup();
-	SX126xWaitOnBusy();
-
-	if (!acquire_modem()) {
-		printk("modem_acquire failed\n");
-		return -EBUSY;
-	}
-	
-	SX126xWaitOnBusy();
-	SX126xSetStandby(STDBY_RC); //SX126xSetOperatingMode(MODE_STDBY_RC);
-	SX126xSetPacketType(PACKET_TYPE_LORA);
-	//SX126xSetRfFrequency(config->frequency);
-	SX126xSetPaConfig(0x04, 0x07, 0x00, 0x01);
-	//SX126xSetFs();
-
-	//SX126xSetTxParams(config->tx_power, RADIO_RAMP_40_US);  //
-		//SX126xSetPaConfig(0x04, 0x07, 0x00, 0x01);  //verified
-	//SX126xWaitOnBusy();
-	//SX126xSetBufferBaseAddress(0x00, 0x00);
-	
-	//setModParams(config); //SX126xSetModulationParams(0x07, 0x01, 0x01);
-
-	//setPacketParams(config, size); //SX126xSetPacketParams(0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08);
-
-	//SX126xClearIrqStatus(IRQ_RADIO_ALL);
-	SX126xSetDioIrqParams(IRQ_RADIO_ALL, IRQ_RADIO_ALL, IRQ_RADIO_NONE, IRQ_RADIO_NONE);
-
-	//SX126xWriteRegister( REG_LR_SYNCWORD, ( LORA_MAC_PRIVATE_SYNCWORD >> 8 ) & 0xFF );
-    //SX126xWriteRegister( REG_LR_SYNCWORD + 1, LORA_MAC_PRIVATE_SYNCWORD & 0xFF );
-	SX126xSetPayload( payload, size );
-	SX126xWaitOnBusy();
-	SX126xSetTx(24960); //timeout
-	SX126xWaitOnBusy();
-	k_sleep(K_MSEC(500));
-	release_modem();
-	//Wait for the IRQ TxDone or Timeout:
-
-
-
-	//Clear the IRQ TxDone flag
-	//SX126xClearIrqStatus(IRQ_TX_DONE);
-	//SX126xClearIrqStatus(IRQ_TX_DONE);
-	//should be in STDBY_RC mode
-
-	//Set up RX continuous
-	//setRxContinuous();
+int placeHolder(const struct device *dev);
+int placeHolder(const struct device *dev) {
 	return 0;
 }
 
-int setRxContinuous(const struct device *dev) {
-	SX126xSetStandby(STDBY_RC);
-	SX126xSetPacketType(PACKET_TYPE_LORA);
-	SX126xSetRfFrequency(921000000);
-	SX126xSetBufferBaseAddress(0x00, 0x00);
-	//SX126xSetModulationParams(0x07, 0x01, 0x01);
-	//setModParams(dev->config);
-	//SX126xSetPacketParams(0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08);
-	//setPacketParams(dev->config, 6);
-	SX126xSetDioIrqParams(0xff, 0xff, 0x00, 0x00);
-	SX126xWriteRegister(0x08, 0x04); //syncword
-	SX126xSetOperatingMode(MODE_RX);
-	//SX126xSetRx(0);
-
-	SX126xSetDioIrqParams( IRQ_RADIO_ALL, //IRQ_RX_DONE | IRQ_RX_TX_TIMEOUT,
-                           IRQ_RADIO_ALL, //IRQ_RX_DONE | IRQ_RX_TX_TIMEOUT,
-                           IRQ_RADIO_NONE,
-                           IRQ_RADIO_NONE );
-
-	SX126xSetRxBoosted(0);
-
-	//Wait for IRQ RxDone2 or Timeout: the chip will stay in Rx and look for a new packet if the continuous mode is selected
-	//otherwise it will goes to STDBY_RC mode.
-
-	//In case of the IRQ RxDone, check the status to ensure CRC is correct: use the command GetIrqStatus()
-	//The IRQ RxDone means that a packet has been received but the CRC could be wrong: the user must check the CRC before
-	//validating the packet.
-	//Clear IRQ flag RxDone or Timeout: use the command ClearIrqStatus(). In case of a valid packet (CRC OK), get the packet
-	//length and address of the first byte of the received payload by using the command GetRxBufferStatus(...)
-	//In case of a valid packet (CRC OK), start reading the packet
-
-	return 0;
-}
-
-/* void setModParams(const struct lora_modem_config *config) {
-	int n = 4;
-	uint8_t buf[n];
-	//buf[0] = modulationParams->Params.LoRa.SpreadingFactor;
-	//buf[0] = config->datarate;
-	buf[0] = SF_11;
-	//buf[1] = modulationParams->Params.LoRa.Bandwidth;
-	buf[1] = BW_125_KHZ;
-	//buf[2] = modulationParams->Params.LoRa.CodingRate;
-	buf[2] = CR_4_5;
-	//buf[3] = modulationParams->Params.LoRa.LowDatarateOptimize;
-	buf[3] = 0x01;
-    SX126xWriteCommand( RADIO_SET_MODULATIONPARAMS, buf, n );
-}
-
-void setPacketParams(const struct lora_modem_config *config, uint8_t size) {
-	int n = 6;
-	uint8_t buf[n];
-	buf[0] = ( 0x00 >> 8 ) & 0xFF; //Preamble length
-	buf[1] = 0x06; //Preamble length
-	buf[2] = 0x01; //Implicit header
-	buf[3] = 0x06; //Payload length
-	buf[4] = LORA_CRC_ON; //CRC on
-	buf[5] = false; //Invert IQ
-    SX126xWriteCommand( RADIO_SET_PACKETPARAMS, buf, n );
-} */
-
-DEVICE_DT_INST_DEFINE(0, &sx126x_lora_init, NULL, &dev_data,
+DEVICE_DT_INST_DEFINE(0, &placeHolder, NULL, &dev_data,
 		      &dev_config, POST_KERNEL, CONFIG_LORA_INIT_PRIORITY,
 		      &sx126x_lora_api);
+
+/* DEVICE_DT_INST_DEFINE(0, &sx126x_lora_init, NULL, &dev_data,
+		      &dev_config, POST_KERNEL, CONFIG_LORA_INIT_PRIORITY,
+		      &sx126x_lora_api); */
