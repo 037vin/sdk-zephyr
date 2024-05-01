@@ -533,6 +533,7 @@ uint8_t registerRead(const struct device *dev, uint16_t address) {
 int setRfChannel(const struct device *dev, uint32_t freq) {
 	SX126xWaitOnBusy();
 	SX126xSetStandby(STDBY_RC);
+	SX126xWaitOnBusy();
 	SX126xSetPacketType(PACKET_TYPE_LORA);
 	SX126xWaitOnBusy();
 	SX126xSetRfFrequency(freq);
